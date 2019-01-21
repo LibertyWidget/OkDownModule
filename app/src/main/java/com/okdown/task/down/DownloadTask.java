@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import okhttp3.MediaType;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
@@ -206,7 +207,6 @@ public class DownloadTask implements Runnable {
             postOnError(progress, e);
             return;
         }
-
         //check network data
         int code = response.code();
         if (code == 404 || code >= 500) {
@@ -220,6 +220,26 @@ public class DownloadTask implements Runnable {
         }
         if (progress.totalSize == -1) {
             progress.totalSize = body.contentLength();
+        }
+        //file type
+        MediaType mediaType = body.contentType();
+        if (null != mediaType) {
+            String subtype = mediaType.subtype();
+            if (!TextUtils.isEmpty(subtype)) {
+                /*
+                    http://1251883823.vod2.myqcloud.com/6b94ca32vodsh1251883823/a0fd47ff5285890784524177969/2gyLYJt7ZQ8A.mp4
+
+
+                 */
+                if (subtype.contains("video/mp4")) {
+
+                } else
+                    //https://v-6-cn.com/20190101/8414_be31c04d/index.m3u8?sign=a59c25d7579e1f7e96edca7af6165cbd
+                    //https://135zyv6.xw0371.com/2018/11/15/tqsrSI3Bbm0abCmU/playlist.m3u8
+                    if (subtype.contains("vnd.apple.mpegurl") || subtype.contains("x-mpegURL")) {
+
+                    }
+            }
         }
 
         //create filename
