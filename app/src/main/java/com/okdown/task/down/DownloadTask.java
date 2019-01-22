@@ -1,12 +1,10 @@
 package com.okdown.task.down;
 
 import android.content.ContentValues;
-import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.okdown.OkDownload;
-import com.okdown.OkGo;
 import com.okdown.db.DownloadManager;
 import com.okdown.request.Request;
 import com.okdown.request.m3u8.M3U8;
@@ -22,12 +20,10 @@ import com.okdown.utils.IOUtils;
 import com.okdown.utils.OkLog;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
@@ -238,8 +234,8 @@ public class DownloadTask implements Runnable {
             if (!TextUtils.isEmpty(progress.filePath)) {
                 File file = new File(progress.filePath);
                 if (!file.exists()) {
-                    postOnError(progress, OkLog.BREAKPOINT_NOT_EXIST());
-                    return;
+                    //如果文件删除，数据库还有 那么重新开始下载
+                    progress.currentSize = 0;
                 }
             }
         }
@@ -365,6 +361,14 @@ public class DownloadTask implements Runnable {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        } else {
+            try {
+                DownloadManager.$().replace(progress);
+                downloadOthers(body.byteStream(), randomAccessFile, progress);
+            } catch (IOException e) {
+                postOnError(progress, e);
+                return;
+            }
         }
 
         //check finish status
@@ -385,16 +389,20 @@ public class DownloadTask implements Runnable {
         this.progress.status = FileStatus.LOADING.ordinal();
         byte[] buffer = new byte[BUFFER_SIZE];
         List<M3U8Ts> tsList = m3U8.getTsList();
+        String baseUrl = OkDownload.$().getFolder() + progress.name + File.separator + "list" + File.separator;
         if (progress.currentSize <= 0) {
             progress.currentSize = 0;
+            IOUtils.createFolder(new File(baseUrl));
         }
+
         for (; progress.currentSize < tsList.size(); progress.currentSize++) {
             M3U8Ts ts = tsList.get((int) progress.currentSize);
 
             URL url = new URL(ts.getFile());
             HttpURLConnection urlConn = (HttpURLConnection) url.openConnection();
             BufferedInputStream in = new BufferedInputStream(urlConn.getInputStream(), BUFFER_SIZE);
-            String fileName = OkDownload.$().getFolder() + progress.name + File.separator + "list" + File.separator + ts.getFileName();
+
+            String fileName = baseUrl + ts.getFileName();
             File file1 = new File(fileName);
             if (!file1.exists()) {
                 int len;
@@ -440,6 +448,31 @@ public class DownloadTask implements Runnable {
         }
     }
 
+    private void downloadOthers(InputStream input, RandomAccessFile out, Progress progress) throws
+            IOException {
+        if (input == null || out == null) return;
+
+        progress.status = FileStatus.LOADING.ordinal();
+        byte[] buffer = new byte[BUFFER_SIZE];
+        BufferedInputStream in = new BufferedInputStream(input, BUFFER_SIZE);
+        int len;
+        try {
+            while ((len = in.read(buffer, 0, BUFFER_SIZE)) != -1 && progress.status == FileStatus.LOADING.ordinal()) {
+                out.write(buffer, 0, len);
+
+                Progress.changeProgress(progress, len, progress.totalSize, new Progress.Action() {
+                    @Override
+                    public void call(Progress progress) {
+                        postLoading(progress);
+                    }
+                });
+            }
+        } finally {
+            IOUtils.closeQuietly(out);
+            IOUtils.closeQuietly(in);
+            IOUtils.closeQuietly(input);
+        }
+    }
 
     private void postOnStart(final Progress progress) {
         progress.speed = 0;
