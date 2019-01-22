@@ -51,8 +51,9 @@ public class DownloadTask implements Runnable {
     private ThreadPoolExecutor executor;
     private PriorityRunnable priorityRunnable;
 
-    public DownloadTask(Request<File, ? extends Request> request) {
+    public DownloadTask(String name, Request<File, ? extends Request> request) {
         progress = new Progress();
+        progress.name = name;
         progress.folder = OkDownload.$().getFolder();
         progress.url = request.getBaseUrl();
         progress.status = FileStatus.NONE.ordinal();
@@ -200,8 +201,13 @@ public class DownloadTask implements Runnable {
         if (null != progress.type)
             if (TextUtils.equals(DownMediaType.M3U8.name(), progress.type)) {
                 if (!TextUtils.isEmpty(progress.m3u8UrlList)) {
-                    if (0 != progress.totalSize) {//原来都没有下载成功过
-                        //待处理
+                    if (0 != progress.currentSize) {//原来都没有下载成功过
+                        File file = new File(progress.folder);
+                        File[] files = file.listFiles();
+                        if (files.length < progress.currentSize) {
+                            IOUtils.delFileOrFolder(file);
+                            progress.currentSize = 0;
+                        }
                     }
                     M3U8 m3U8 = MUtils.toJson(progress.m3u8UrlList);
                     m3U8.setBasePath(progress.m3u8Url);
@@ -267,6 +273,7 @@ public class DownloadTask implements Runnable {
         if (null != mediaType) {
             String subtype = mediaType.subtype();
             if (!TextUtils.isEmpty(subtype)) {
+                subtype = subtype.toLowerCase();
                 /*
                     http://1251883823.vod2.myqcloud.com/6b94ca32vodsh1251883823/a0fd47ff5285890784524177969/2gyLYJt7ZQ8A.mp4
                  */
@@ -276,7 +283,7 @@ public class DownloadTask implements Runnable {
                     //https://v-6-cn.com/20190101/8414_be31c04d/index.m3u8?sign=a59c25d7579e1f7e96edca7af6165cbd
                     //https://135zyv6.xw0371.com/2018/11/15/tqsrSI3Bbm0abCmU/playlist.m3u8
                     //http://h1.aaccy.com/ckplayer/youku/lsit/XNDAxODM2MjkzMg==.m3u8?ts=1548126978&key=30ede8a4ba665a2c9d080a1775d094f5
-                    if (subtype.contains("vnd.apple.mpegurl") || subtype.contains("x-mpegURL")) {
+                    if (subtype.contains("vnd.apple.mpegurl") || subtype.contains("x-mpegurl")) {
                         progress.type = DownMediaType.M3U8.name();
                     }
             }
@@ -296,10 +303,10 @@ public class DownloadTask implements Runnable {
         //create and check file
         File file;
         if (TextUtils.isEmpty(progress.filePath)) {
-            file = new File(progress.folder, fileName);
+            file = new File(String.format("%s%s/%s", progress.folder, progress.name, fileName));
             progress.filePath = file.getAbsolutePath();
         } else {
-            file = new File(progress.filePath);
+            file = new File(progress.filePath, progress.name);
         }
 
         if (startPosition > 0 && !file.exists()) {
@@ -336,6 +343,7 @@ public class DownloadTask implements Runnable {
 
         if (TextUtils.equals(DownMediaType.MP4.name(), progress.type)) {
             try {
+                DownloadManager.$().replace(progress);
                 downloadMp4(body.byteStream(), randomAccessFile, progress);
             } catch (IOException e) {
                 postOnError(progress, e);
@@ -347,13 +355,17 @@ public class DownloadTask implements Runnable {
                 if (null != m3U8) {
                     progress.m3u8Url = m3U8.getBasePath();
                     progress.m3u8UrlList = MUtils.toList(progress.m3u8Url, m3U8.getTsList());
+                    try {
+                        DownloadManager.$().replace(progress);
+                        downloadM3u8(m3U8, progress);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-
-        DownloadManager.$().replace(progress);
 
         //check finish status
         if (progress.status == FileStatus.PAUSE.ordinal()) {
@@ -378,24 +390,20 @@ public class DownloadTask implements Runnable {
         }
         for (; progress.currentSize < tsList.size(); progress.currentSize++) {
             M3U8Ts ts = tsList.get((int) progress.currentSize);
+
             URL url = new URL(ts.getFile());
-            //创建http连接
             HttpURLConnection urlConn = (HttpURLConnection) url.openConnection();
             BufferedInputStream in = new BufferedInputStream(urlConn.getInputStream(), BUFFER_SIZE);
-            //下载后的文件名
-            String fileName = OkDownload.$().getFolder() + ts.getFileName();
+            String fileName = OkDownload.$().getFolder() + progress.name + File.separator + "list" + File.separator + ts.getFileName();
             File file1 = new File(fileName);
             if (!file1.exists()) {
-                //创建字节流
                 int len;
                 OutputStream os = new FileOutputStream(fileName);
-                //写数据
                 while ((len = in.read(buffer, 0, BUFFER_SIZE)) != -1 && progress.status == FileStatus.LOADING.ordinal()) {
                     os.write(buffer, 0, len);
                 }
                 os.close();
                 in.close();
-
                 Progress.changeProgress(this.progress, len, this.progress.totalSize, new Progress.Action() {
                     @Override
                     public void call(Progress progress) {

@@ -64,7 +64,7 @@ public class OkDownload {
     }
 
     public void init() {
-        folder = Environment.getExternalStorageDirectory() + "/aa/" + File.separator + "download" + File.separator;
+        folder = Environment.getExternalStorageDirectory() + "/aa" + File.separator + "download" + File.separator;
         IOUtils.createFolder(new File(folder));
         //校验数据的有效性，防止下载过程中退出，第二次进入的时候，由于状态没有更新导致的状态错误
         List<Progress> taskList = DownloadManager.$().getDownloading();
@@ -79,12 +79,15 @@ public class OkDownload {
         DownloadManager.$().replace(taskList);
     }
 
-    public static DownloadTask request(String url) {
+    public static DownloadTask request(String name, String url) {
+        //创建一个性文件夹
+        IOUtils.createFolder(new File(OkDownload.$().getFolder() + name));
+
         Request<File, ? extends Request> request = OkGo.get(url);
         Map<String, DownloadTask> taskMap = OkDownload.$().getTaskMap();
         DownloadTask task = taskMap.get(url);
         if (task == null) {
-            task = new DownloadTask(request);
+            task = new DownloadTask(name, request);
             taskMap.put(url, task);
         }
         return task;
