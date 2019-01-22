@@ -30,6 +30,10 @@ public class DBHelper extends SQLiteOpenHelper {
         super(context, DB_CACHE_NAME, null, DB_CACHE_VERSION);
 
         downloadTableEntity.addColumn(new ColumnEntity(Progress.URL, "VARCHAR", true, true))//
+                .addColumn(new ColumnEntity(Progress.TYPE, "VARCHAR"))//
+                .addColumn(new ColumnEntity(Progress.M3U8_URL, "VARCHAR"))//
+                .addColumn(new ColumnEntity(Progress.M3U8_URL_LIST, "VARCHAR"))//
+                .addColumn(new ColumnEntity(Progress.M3U8_ORIGINAL, "VARCHAR"))//
                 .addColumn(new ColumnEntity(Progress.FOLDER, "VARCHAR"))//
                 .addColumn(new ColumnEntity(Progress.FILE_PATH, "VARCHAR"))//
                 .addColumn(new ColumnEntity(Progress.FILE_NAME, "VARCHAR"))//

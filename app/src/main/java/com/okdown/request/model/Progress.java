@@ -16,6 +16,10 @@ public class Progress implements Serializable {
     private static final long serialVersionUID = 6353658567594109891L;
 
     public static final String URL = "url";
+    public static final String TYPE = "type";
+    public static final String M3U8_URL = "m3u8Url";
+    public static final String M3U8_URL_LIST = "m3u8UrlList";
+    public static final String M3U8_ORIGINAL = "m3u8Original";
     public static final String FOLDER = "folder";
     public static final String FILE_PATH = "filePath";
     public static final String FILE_NAME = "fileName";
@@ -26,11 +30,16 @@ public class Progress implements Serializable {
     public static final String PRIORITY = "priority";
     public static final String DATE = "date";
     public static final String REQUEST = "request";
+
     public static final String EXTRA1 = "extra1";
     public static final String EXTRA2 = "extra2";
     public static final String EXTRA3 = "extra3";
 
     public String url;                              //网址
+    public String type;                             //文件后缀
+    public String m3u8Url;                             //文件后缀
+    public String m3u8UrlList;                      //如果文件是切片那么这里保存的是切片链接集合，用逗号分开
+    public String m3u8Original;                      //原始数据
     public String folder;                           //保存文件夹
     public String filePath;                         //保存文件地址
     public String fileName;                         //保存的文件名
@@ -84,7 +93,9 @@ public class Progress implements Serializable {
         return progress;
     }
 
-    /** 平滑网速，避免抖动过大 */
+    /**
+     * 平滑网速，避免抖动过大
+     */
     private long bufferSpeed(long speed) {
         speedBuffer.add(speed);
         if (speedBuffer.size() > 10) {
@@ -97,7 +108,9 @@ public class Progress implements Serializable {
         return sum / speedBuffer.size();
     }
 
-    /** 转换进度信息 */
+    /**
+     * 转换进度信息
+     */
     public void from(Progress progress) {
         totalSize = progress.totalSize;
         currentSize = progress.currentSize;
@@ -114,6 +127,10 @@ public class Progress implements Serializable {
     public static ContentValues buildContentValues(Progress progress) {
         ContentValues values = new ContentValues();
         values.put(URL, progress.url);
+        values.put(TYPE, progress.type);
+        values.put(M3U8_URL_LIST, progress.m3u8UrlList);
+        values.put(M3U8_URL, progress.m3u8Url);
+        values.put(M3U8_ORIGINAL, progress.m3u8Original);
         values.put(FOLDER, progress.folder);
         values.put(FILE_PATH, progress.filePath);
         values.put(FILE_NAME, progress.fileName);
@@ -144,6 +161,10 @@ public class Progress implements Serializable {
     public static Progress parseCursorToBean(Cursor cursor) {
         Progress progress = new Progress();
         progress.url = cursor.getString(cursor.getColumnIndex(Progress.URL));
+        progress.type = cursor.getString(cursor.getColumnIndex(Progress.TYPE));
+        progress.m3u8Url = cursor.getString(cursor.getColumnIndex(Progress.M3U8_URL));
+        progress.m3u8UrlList = cursor.getString(cursor.getColumnIndex(Progress.M3U8_URL_LIST));
+        progress.m3u8Original = cursor.getString(cursor.getColumnIndex(Progress.M3U8_ORIGINAL));
         progress.folder = cursor.getString(cursor.getColumnIndex(Progress.FOLDER));
         progress.filePath = cursor.getString(cursor.getColumnIndex(Progress.FILE_PATH));
         progress.fileName = cursor.getString(cursor.getColumnIndex(Progress.FILE_NAME));
@@ -178,16 +199,19 @@ public class Progress implements Serializable {
     @Override
     public String toString() {
         return "Progress{" +//
-               "fraction=" + fraction +//
-               ", totalSize=" + totalSize +//
-               ", currentSize=" + currentSize +//
-               ", speed=" + speed +//
-               ", status=" + status +//
-               ", priority=" + priority +//
-               ", folder=" + folder +//
-               ", filePath=" + filePath +//
-               ", fileName=" + fileName +//
-               ", url=" + url +//
-               '}';
+                "fraction=" + fraction +//
+                ", totalSize=" + totalSize +//
+                ", currentSize=" + currentSize +//
+                ", speed=" + speed +//
+                ", status=" + status +//
+                ", priority=" + priority +//
+                ", folder=" + folder +//
+                ", m3u8UrlList=" + m3u8UrlList +//
+                ", m3u8Original=" + m3u8Original +//
+                ", type=" + type +//
+                ", filePath=" + filePath +//
+                ", fileName=" + fileName +//
+                ", url=" + url +//
+                '}';
     }
 }

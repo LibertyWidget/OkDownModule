@@ -57,6 +57,7 @@ public class OkGo {
     public OkGo init(Application app) {
         context = app;
         initOkGo(app);
+        OkDownload.$().init();
         return this;
     }
 

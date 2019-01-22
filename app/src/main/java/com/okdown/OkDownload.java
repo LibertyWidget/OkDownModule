@@ -52,8 +52,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class OkDownload {
 
     private String folder;                                      //下载的默认文件夹
-    private DownloadThreadPool threadPool;                      //下载的线程池
-    private ConcurrentHashMap<String, DownloadTask> taskMap;    //所有任务
+    private final DownloadThreadPool threadPool = new DownloadThreadPool();//下载的线程池
+    private final ConcurrentHashMap<String, DownloadTask> taskMap = new ConcurrentHashMap<>();//所有任务
 
     public static OkDownload $() {
         return OkDownloadHolder.instance;
@@ -63,18 +63,18 @@ public class OkDownload {
         private static final OkDownload instance = new OkDownload();
     }
 
-    private OkDownload() {
-        folder = Environment.getExternalStorageDirectory() + File.separator + "download" + File.separator;
+    public void init() {
+        folder = Environment.getExternalStorageDirectory() + "/aa/" + File.separator + "download" + File.separator;
         IOUtils.createFolder(new File(folder));
-        threadPool = new DownloadThreadPool();
-        taskMap = new ConcurrentHashMap<>();
-
         //校验数据的有效性，防止下载过程中退出，第二次进入的时候，由于状态没有更新导致的状态错误
         List<Progress> taskList = DownloadManager.$().getDownloading();
         for (Progress info : taskList) {
             if (info.status == FileStatus.WAITING.ordinal() || info.status == FileStatus.LOADING.ordinal() || info.status == FileStatus.PAUSE.ordinal()) {
                 info.status = FileStatus.NONE.ordinal();
             }
+            //恢复到内存数据
+            DownloadTask task = new DownloadTask(info);
+            taskMap.put(info.url, task);
         }
         DownloadManager.$().replace(taskList);
     }
@@ -88,36 +88,6 @@ public class OkDownload {
             taskMap.put(url, task);
         }
         return task;
-    }
-
-    /**
-     * 从数据库中恢复任务
-     */
-    public static DownloadTask restore(Progress progress) {
-        Map<String, DownloadTask> taskMap = OkDownload.$().getTaskMap();
-        DownloadTask task = taskMap.get(progress.url);
-        if (task == null) {
-            task = new DownloadTask(progress);
-            taskMap.put(progress.url, task);
-        }
-        return task;
-    }
-
-    /**
-     * 从数据库中恢复任务
-     */
-    public static List<DownloadTask> restore(List<Progress> progressList) {
-        Map<String, DownloadTask> taskMap = OkDownload.$().getTaskMap();
-        List<DownloadTask> tasks = new ArrayList<>();
-        for (Progress progress : progressList) {
-            DownloadTask task = taskMap.get(progress.url);
-            if (task == null) {
-                task = new DownloadTask(progress);
-                taskMap.put(progress.url, task);
-            }
-            tasks.add(task);
-        }
-        return tasks;
     }
 
     public void startAll() {

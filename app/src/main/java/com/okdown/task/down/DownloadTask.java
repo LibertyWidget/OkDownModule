@@ -1,11 +1,18 @@
 package com.okdown.task.down;
 
 import android.content.ContentValues;
+import android.os.Environment;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.okdown.OkDownload;
+import com.okdown.OkGo;
 import com.okdown.db.DownloadManager;
 import com.okdown.request.Request;
+import com.okdown.request.m3u8.M3U8;
+import com.okdown.request.m3u8.M3U8Ts;
+import com.okdown.request.m3u8.MUtils;
+import com.okdown.request.model.DownMediaType;
 import com.okdown.request.model.FileStatus;
 import com.okdown.request.model.HttpHeaders;
 import com.okdown.request.model.HttpUtils;
@@ -15,12 +22,19 @@ import com.okdown.utils.IOUtils;
 import com.okdown.utils.OkLog;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -129,17 +143,17 @@ public class DownloadTask implements Runnable {
             executor.execute(priorityRunnable);
         } else if (progress.status == FileStatus.FINISH.ordinal()) {
             if (progress.filePath == null) {
-                postOnError(progress, new OkLog("the file of the task with tag:" + progress.url + " may be invalid or damaged, please call the method restart() to download again！"));
+                postOnError(progress, new OkLog("the file of the task with tag:" + progress.url + " may be invalid or damaged, please call the method restart() to downloadMp4 again！"));
             } else {
                 File file = new File(progress.filePath);
                 if (file.exists() && file.length() == progress.totalSize) {
                     postOnFinish(progress);
                 } else {
-                    postOnError(progress, new OkLog("the file " + progress.filePath + " may be invalid or damaged, please call the method restart() to download again！"));
+                    postOnError(progress, new OkLog("the file " + progress.filePath + " may be invalid or damaged, please call the method restart() to downloadMp4 again！"));
                 }
             }
         } else {
-            OkLog.e("the task with tag " + progress.url + " is already in the download queue, current task status is " + progress.status);
+            OkLog.e("the task with tag " + progress.url + " is already in the downloadMp4 queue, current task status is " + progress.status);
         }
     }
 
@@ -181,6 +195,33 @@ public class DownloadTask implements Runnable {
 
     @Override
     public void run() {
+
+        //从数据库恢复的情况
+        if (null != progress.type)
+            if (TextUtils.equals(DownMediaType.M3U8.name(), progress.type)) {
+                if (!TextUtils.isEmpty(progress.m3u8UrlList)) {
+                    if (0 != progress.totalSize) {//原来都没有下载成功过
+                        //待处理
+                    }
+                    M3U8 m3U8 = MUtils.toJson(progress.m3u8UrlList);
+                    m3U8.setBasePath(progress.m3u8Url);
+                    try {
+                        downloadM3u8(m3U8, progress);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return;
+                } else if (!TextUtils.isEmpty(progress.m3u8Original)) {
+                    //集合里没有但是原始数据中有
+                    M3U8 parse = MUtils.parse(progress.m3u8Original);
+                    progress.totalSize = 0;
+                    IOUtils.delFileOrFolder(new File(progress.filePath));
+                    Log.e("tag", "开始现在恢复的数据");
+                    return;
+                }
+
+            }
+
         //check breakpoint
         long startPosition = progress.currentSize;
         if (startPosition < 0) {
@@ -228,16 +269,15 @@ public class DownloadTask implements Runnable {
             if (!TextUtils.isEmpty(subtype)) {
                 /*
                     http://1251883823.vod2.myqcloud.com/6b94ca32vodsh1251883823/a0fd47ff5285890784524177969/2gyLYJt7ZQ8A.mp4
-
-
                  */
                 if (subtype.contains("video/mp4")) {
-
+                    progress.type = DownMediaType.MP4.name();
                 } else
                     //https://v-6-cn.com/20190101/8414_be31c04d/index.m3u8?sign=a59c25d7579e1f7e96edca7af6165cbd
                     //https://135zyv6.xw0371.com/2018/11/15/tqsrSI3Bbm0abCmU/playlist.m3u8
+                    //http://h1.aaccy.com/ckplayer/youku/lsit/XNDAxODM2MjkzMg==.m3u8?ts=1548126978&key=30ede8a4ba665a2c9d080a1775d094f5
                     if (subtype.contains("vnd.apple.mpegurl") || subtype.contains("x-mpegURL")) {
-
+                        progress.type = DownMediaType.M3U8.name();
                     }
             }
         }
@@ -293,13 +333,27 @@ public class DownloadTask implements Runnable {
             postOnError(progress, e);
             return;
         }
-        try {
-            DownloadManager.$().replace(progress);
-            download(body.byteStream(), randomAccessFile, progress);
-        } catch (IOException e) {
-            postOnError(progress, e);
-            return;
+
+        if (TextUtils.equals(DownMediaType.MP4.name(), progress.type)) {
+            try {
+                downloadMp4(body.byteStream(), randomAccessFile, progress);
+            } catch (IOException e) {
+                postOnError(progress, e);
+                return;
+            }
+        } else if (TextUtils.equals(DownMediaType.M3U8.name(), progress.type)) {
+            try {
+                M3U8 m3U8 = MUtils.parseIndex(progress.url);
+                if (null != m3U8) {
+                    progress.m3u8Url = m3U8.getBasePath();
+                    progress.m3u8UrlList = MUtils.toList(progress.m3u8Url, m3U8.getTsList());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+
+        DownloadManager.$().replace(progress);
 
         //check finish status
         if (progress.status == FileStatus.PAUSE.ordinal()) {
@@ -315,7 +369,45 @@ public class DownloadTask implements Runnable {
         }
     }
 
-    private void download(InputStream input, RandomAccessFile out, Progress progress) throws IOException {
+    private synchronized void downloadM3u8(M3U8 m3U8, Progress progress) throws IOException {
+        this.progress.status = FileStatus.LOADING.ordinal();
+        byte[] buffer = new byte[BUFFER_SIZE];
+        List<M3U8Ts> tsList = m3U8.getTsList();
+        if (progress.currentSize <= 0) {
+            progress.currentSize = 0;
+        }
+        for (; progress.currentSize < tsList.size(); progress.currentSize++) {
+            M3U8Ts ts = tsList.get((int) progress.currentSize);
+            URL url = new URL(ts.getFile());
+            //创建http连接
+            HttpURLConnection urlConn = (HttpURLConnection) url.openConnection();
+            BufferedInputStream in = new BufferedInputStream(urlConn.getInputStream(), BUFFER_SIZE);
+            //下载后的文件名
+            String fileName = OkDownload.$().getFolder() + ts.getFileName();
+            File file1 = new File(fileName);
+            if (!file1.exists()) {
+                //创建字节流
+                int len;
+                OutputStream os = new FileOutputStream(fileName);
+                //写数据
+                while ((len = in.read(buffer, 0, BUFFER_SIZE)) != -1 && progress.status == FileStatus.LOADING.ordinal()) {
+                    os.write(buffer, 0, len);
+                }
+                os.close();
+                in.close();
+
+                Progress.changeProgress(this.progress, len, this.progress.totalSize, new Progress.Action() {
+                    @Override
+                    public void call(Progress progress) {
+                        postLoading(progress);
+                    }
+                });
+            }
+        }
+    }
+
+    private void downloadMp4(InputStream input, RandomAccessFile out, Progress progress) throws
+            IOException {
         if (input == null || out == null) return;
 
         progress.status = FileStatus.LOADING.ordinal();
@@ -339,6 +431,7 @@ public class DownloadTask implements Runnable {
             IOUtils.closeQuietly(input);
         }
     }
+
 
     private void postOnStart(final Progress progress) {
         progress.speed = 0;
