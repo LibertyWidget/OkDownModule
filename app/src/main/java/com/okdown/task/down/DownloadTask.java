@@ -172,7 +172,7 @@ public class DownloadTask implements Runnable {
                     if (0 != progress.currentSize) {//原来都没有下载成功过
                         File file = new File(String.format(BASE_URL, progress.name));
                         File[] files = file.listFiles();
-                        if (files.length < progress.currentSize) {
+                        if (null == files || files.length < progress.currentSize) {
                             IOUtils.delFileOrFolder(file);
                             progress.currentSize = 0;
                         }
