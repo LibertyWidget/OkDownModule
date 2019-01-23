@@ -39,8 +39,8 @@ import java.util.concurrent.ConcurrentHashMap;
                     }
 
                     @Override
-                    public void onFinish(Progress progress) {
-                        Log.e("tag", "onFinish " + progress.toString());
+                    public void onComplete(Progress progress) {
+                        Log.e("tag", "onComplete " + progress.toString());
                     }
 
                     @Override
@@ -58,6 +58,7 @@ public class OkDownload {
     public static OkDownload $() {
         return OkDownloadHolder.instance;
     }
+
 
     private static class OkDownloadHolder {
         private static final OkDownload instance = new OkDownload();
@@ -79,7 +80,7 @@ public class OkDownload {
         DownloadManager.$().replace(taskList);
     }
 
-    public static DownloadTask request(String name, String url) {
+    public DownloadTask request(String name, String url) {
         //创建一个性文件夹
         IOUtils.createFolder(new File(OkDownload.$().getFolder() + name));
 
@@ -93,6 +94,21 @@ public class OkDownload {
         return task;
     }
 
+    public void start(String url) {
+        for (Map.Entry<String, DownloadTask> entry : taskMap.entrySet()) {
+            if (entry.getKey().equals(url)) {
+                DownloadTask task = entry.getValue();
+                if (task == null) {
+                    OkLog.e("can't find task with tag = " + entry.getKey());
+                    continue;
+                }
+                task.start();
+                break;
+            }
+        }
+    }
+
+
     public void startAll() {
         for (Map.Entry<String, DownloadTask> entry : taskMap.entrySet()) {
             DownloadTask task = entry.getValue();
@@ -101,6 +117,37 @@ public class OkDownload {
                 continue;
             }
             task.start();
+        }
+    }
+
+    public void pause(String url) {
+        //先停止未开始的任务
+        for (Map.Entry<String, DownloadTask> entry : taskMap.entrySet()) {
+            DownloadTask task = entry.getValue();
+            if (task == null) {
+                OkLog.e("can't find task with tag = " + entry.getKey());
+                continue;
+            }
+            if (entry.getKey().equals(url)) {
+                if (task.progress.status != FileStatus.LOADING.ordinal()) {
+                    task.pause();
+                }
+                break;
+            }
+        }
+        //再停止进行中的任务
+        for (Map.Entry<String, DownloadTask> entry : taskMap.entrySet()) {
+            DownloadTask task = entry.getValue();
+            if (task == null) {
+                OkLog.e("can't find task with tag = " + entry.getKey());
+                continue;
+            }
+            if (entry.getKey().equals(url)) {
+                if (task.progress.status == FileStatus.LOADING.ordinal()) {
+                    task.pause();
+                }
+                break;
+            }
         }
     }
 

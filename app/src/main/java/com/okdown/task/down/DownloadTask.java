@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.URLUtil;
-import android.webkit.WebMessage;
 
 import com.okdown.OkDownload;
 import com.okdown.db.DownloadManager;
@@ -564,7 +563,7 @@ public class DownloadTask implements Runnable {
             public void run() {
                 for (DownloadListener listener : listeners.values()) {
                     listener.onProgress(progress);
-                    listener.onFinish(progress);
+                    listener.onComplete(progress);
                 }
             }
         });

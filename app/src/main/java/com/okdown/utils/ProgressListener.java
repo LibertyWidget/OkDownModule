@@ -10,7 +10,7 @@ public interface ProgressListener {
 
     void onError(Progress progress);
 
-    void onFinish(Progress progress);
+    void onComplete(Progress progress);
 
     void onRemove(Progress progress);
 }
