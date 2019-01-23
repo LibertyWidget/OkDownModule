@@ -44,9 +44,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 .addColumn(new ColumnEntity(Progress.PRIORITY, "INTEGER"))//
                 .addColumn(new ColumnEntity(Progress.DATE, "INTEGER"))//
                 .addColumn(new ColumnEntity(Progress.REQUEST, "BLOB"))//
-                .addColumn(new ColumnEntity(Progress.EXTRA1, "BLOB"))//
-                .addColumn(new ColumnEntity(Progress.EXTRA2, "BLOB"))//
-                .addColumn(new ColumnEntity(Progress.EXTRA3, "BLOB"));
+                .addColumn(new ColumnEntity(Progress.EXTRA1, "BLOB"));//
     }
 
     @Override

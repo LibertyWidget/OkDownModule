@@ -5,7 +5,7 @@ import android.util.Log;
 public class OkLog extends Exception {
     private static final long serialVersionUID = -8641198158155821498L;
 
-    private static boolean isLogEnable = true;
+    private static boolean isLogEnable = false;
 
     public static void e(String msg) {
         e("OkLog_tag", msg);

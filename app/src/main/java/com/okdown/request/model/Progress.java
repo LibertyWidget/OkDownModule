@@ -30,10 +30,7 @@ public class Progress implements Serializable {
     public static final String PRIORITY = "priority";
     public static final String DATE = "date";
     public static final String REQUEST = "request";
-
     public static final String EXTRA1 = "extra1";
-    public static final String EXTRA2 = "extra2";
-    public static final String EXTRA3 = "extra3";
 
     public String url;                              //网址
     public String type;                             //文件后缀
@@ -52,8 +49,6 @@ public class Progress implements Serializable {
     public long date;                               //创建时间
     public Request<?, ? extends Request> request;   //网络请求
     public Serializable extra1;                     //额外的数据
-    public Serializable extra2;                     //额外的数据
-    public Serializable extra3;                     //额外的数据
     public Throwable exception;                     //当前进度出现的异常
 
     private transient long tempSize;                //每一小段时间间隔的网络流量
@@ -142,8 +137,6 @@ public class Progress implements Serializable {
         values.put(DATE, progress.date);
         values.put(REQUEST, IOUtils.toByteArray(progress.request));
         values.put(EXTRA1, IOUtils.toByteArray(progress.extra1));
-        values.put(EXTRA2, IOUtils.toByteArray(progress.extra2));
-        values.put(EXTRA3, IOUtils.toByteArray(progress.extra3));
         return values;
     }
 
@@ -176,8 +169,6 @@ public class Progress implements Serializable {
         progress.date = cursor.getLong(cursor.getColumnIndex(Progress.DATE));
         progress.request = (Request<?, ? extends Request>) IOUtils.toObject(cursor.getBlob(cursor.getColumnIndex(Progress.REQUEST)));
         progress.extra1 = (Serializable) IOUtils.toObject(cursor.getBlob(cursor.getColumnIndex(Progress.EXTRA1)));
-        progress.extra2 = (Serializable) IOUtils.toObject(cursor.getBlob(cursor.getColumnIndex(Progress.EXTRA2)));
-        progress.extra3 = (Serializable) IOUtils.toObject(cursor.getBlob(cursor.getColumnIndex(Progress.EXTRA3)));
         return progress;
     }
 

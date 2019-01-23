@@ -259,7 +259,6 @@ public abstract class BaseDao<T> {
         } finally {
             database.endTransaction();
             lock.unlock();
-            OkLog.e(TAG, System.currentTimeMillis() - start + " updateContentValues");
         }
         return false;
     }
