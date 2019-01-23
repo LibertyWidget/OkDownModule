@@ -33,7 +33,6 @@ public class DBHelper extends SQLiteOpenHelper {
                 .addColumn(new ColumnEntity(Progress.TYPE, "VARCHAR"))//
                 .addColumn(new ColumnEntity(Progress.M3U8_URL, "VARCHAR"))//
                 .addColumn(new ColumnEntity(Progress.M3U8_URL_LIST, "VARCHAR"))//
-                .addColumn(new ColumnEntity(Progress.M3U8_ORIGINAL, "VARCHAR"))//
                 .addColumn(new ColumnEntity(Progress.NAME, "VARCHAR"))//
                 .addColumn(new ColumnEntity(Progress.FOLDER, "VARCHAR"))//
                 .addColumn(new ColumnEntity(Progress.FILE_PATH, "VARCHAR"))//

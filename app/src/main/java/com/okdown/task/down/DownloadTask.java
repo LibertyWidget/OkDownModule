@@ -3,6 +3,8 @@ package com.okdown.task.down;
 import android.content.ContentValues;
 import android.text.TextUtils;
 import android.util.Log;
+import android.webkit.URLUtil;
+import android.webkit.WebMessage;
 
 import com.okdown.OkDownload;
 import com.okdown.db.DownloadManager;
@@ -26,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
@@ -39,8 +40,10 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 public class DownloadTask implements Runnable {
-
     private static final int BUFFER_SIZE = 1024 * 8;
+    private static final String FILE_NAME = "%s%s.mp4";
+    private static final String FOLDED = OkDownload.$().getFolder() + "%s" + File.separator;
+    private static final String BASE_URL = FOLDED + "list" + File.separator;
 
     public Progress progress;
     public Map<Object, DownloadListener> listeners;
@@ -72,35 +75,6 @@ public class DownloadTask implements Runnable {
         } else {
             OkLog.e("folder is null, ignored!");
         }
-        return this;
-    }
-
-    public DownloadTask fileName(String fileName) {
-        if (fileName != null && !TextUtils.isEmpty(fileName.trim())) {
-            progress.fileName = fileName;
-        } else {
-            OkLog.e("fileName is null, ignored!");
-        }
-        return this;
-    }
-
-    public DownloadTask priority(int priority) {
-        progress.priority = priority;
-        return this;
-    }
-
-    public DownloadTask extra1(Serializable extra1) {
-        progress.extra1 = extra1;
-        return this;
-    }
-
-    public DownloadTask extra2(Serializable extra2) {
-        progress.extra2 = extra2;
-        return this;
-    }
-
-    public DownloadTask extra3(Serializable extra3) {
-        progress.extra3 = extra3;
         return this;
     }
 
@@ -192,13 +166,12 @@ public class DownloadTask implements Runnable {
 
     @Override
     public void run() {
-
         //从数据库恢复的情况
         if (null != progress.type)
             if (TextUtils.equals(DownMediaType.M3U8.name(), progress.type)) {
                 if (!TextUtils.isEmpty(progress.m3u8UrlList)) {
                     if (0 != progress.currentSize) {//原来都没有下载成功过
-                        File file = new File(progress.folder);
+                        File file = new File(String.format(BASE_URL, progress.name));
                         File[] files = file.listFiles();
                         if (files.length < progress.currentSize) {
                             IOUtils.delFileOrFolder(file);
@@ -213,15 +186,7 @@ public class DownloadTask implements Runnable {
                         e.printStackTrace();
                     }
                     return;
-                } else if (!TextUtils.isEmpty(progress.m3u8Original)) {
-                    //集合里没有但是原始数据中有
-                    M3U8 parse = MUtils.parse(progress.m3u8Original);
-                    progress.totalSize = 0;
-                    IOUtils.delFileOrFolder(new File(progress.filePath));
-                    Log.e("tag", "开始现在恢复的数据");
-                    return;
                 }
-
             }
 
         //check breakpoint
@@ -389,20 +354,45 @@ public class DownloadTask implements Runnable {
         this.progress.status = FileStatus.LOADING.ordinal();
         byte[] buffer = new byte[BUFFER_SIZE];
         List<M3U8Ts> tsList = m3U8.getTsList();
-        String baseUrl = OkDownload.$().getFolder() + progress.name + File.separator + "list" + File.separator;
+
         if (progress.currentSize <= 0) {
             progress.currentSize = 0;
-            IOUtils.createFolder(new File(baseUrl));
+            IOUtils.createFolder(new File(String.format(BASE_URL, progress.name)));
         }
-
+        //是不被标记
+        boolean label = false;
+        //是否有效链接
+        boolean valid = true;
+        if (tsList.size() > 2) {
+            M3U8Ts ts1 = tsList.get(0);
+            M3U8Ts ts2 = tsList.get(1);
+            if (ts1.getFileName().equals(ts2.getFileName())) {
+                label = true;
+            }
+            String file = ts1.getFile();
+            if (!(URLUtil.isHttpUrl(file) || URLUtil.isHttpsUrl(file))) {
+                valid = false;
+            }
+        }
+        String basePath = m3U8.getBasePath();
+        String copyUrl = String.format(BASE_URL, progress.name);
         for (; progress.currentSize < tsList.size(); progress.currentSize++) {
             M3U8Ts ts = tsList.get((int) progress.currentSize);
-
-            URL url = new URL(ts.getFile());
+            String file = ts.getFile();
+            if (!valid) {
+                if (!TextUtils.isEmpty(basePath))
+                    file = String.format("%s%s", basePath, file);
+            }
+            URL url = new URL(file);
             HttpURLConnection urlConn = (HttpURLConnection) url.openConnection();
             BufferedInputStream in = new BufferedInputStream(urlConn.getInputStream(), BUFFER_SIZE);
-
-            String fileName = baseUrl + ts.getFileName();
+            //防止名字相同只是标识不同下载失败
+            String fileName;
+            if (label) {
+                fileName = copyUrl + progress.currentSize + ts.getFileName();
+            } else {
+                fileName = copyUrl + ts.getFileName();
+            }
             File file1 = new File(fileName);
             if (!file1.exists()) {
                 int len;
@@ -420,12 +410,33 @@ public class DownloadTask implements Runnable {
                 });
             }
         }
+        //没有下载完成 并且文件个数相同才合并
+        if (progress.status != FileStatus.FINISH.ordinal() && progress.currentSize == tsList.size()) {
+            String format = String.format(FILE_NAME, String.format(FOLDED, progress.name), progress.name);
+            if (label) {
+                File file = new File(copyUrl);
+                File[] files = file.listFiles();
+                if (null != files) {
+                    MUtils.merge(files, format);
+                }
+            } else {
+                MUtils.merge(m3U8, format);
+            }
+            //移动
+            MUtils.moveFile(format, OkDownload.$().getFolder());
+            //删除
+            MUtils.clearDir(new File(String.format(FOLDED, progress.name)));
+            //下载完成
+            if (progress.currentSize == tsList.size()) {
+                postOnFinish(progress);
+            }
+        } else {
+            Log.e("tag", "merge error file size differ or download not finish ");
+        }
     }
 
-    private void downloadMp4(InputStream input, RandomAccessFile out, Progress progress) throws
-            IOException {
+    private void downloadMp4(InputStream input, RandomAccessFile out, Progress progress) throws IOException {
         if (input == null || out == null) return;
-
         progress.status = FileStatus.LOADING.ordinal();
         byte[] buffer = new byte[BUFFER_SIZE];
         BufferedInputStream in = new BufferedInputStream(input, BUFFER_SIZE);
@@ -448,8 +459,7 @@ public class DownloadTask implements Runnable {
         }
     }
 
-    private void downloadOthers(InputStream input, RandomAccessFile out, Progress progress) throws
-            IOException {
+    private void downloadOthers(InputStream input, RandomAccessFile out, Progress progress) throws IOException {
         if (input == null || out == null) return;
 
         progress.status = FileStatus.LOADING.ordinal();

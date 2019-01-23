@@ -82,16 +82,32 @@ public class MUtils {
     /**
      * 将M3U8对象的所有ts切片合并为1个
      */
-    public static String merge(M3U8 m3u8, String tofile) throws IOException {
+    public static String merge(M3U8 m3u8, String toFile) throws IOException {
         List<M3U8Ts> mergeList = getLimitM3U8Ts(m3u8);
-        File file = new File(tofile);
+        File file = new File(toFile);
         FileOutputStream fos = new FileOutputStream(file);
 
         for (M3U8Ts ts : mergeList) {
             IOUtils.copyLarge(new FileInputStream(new File(file.getParentFile(), ts.getFileName())), fos);
         }
         fos.close();
-        return tofile;
+        return toFile;
+    }
+
+    /**
+     * 合并文件
+     */
+    public static void merge(File[] fileList, String toFile) throws IOException {
+        File file = new File(toFile);
+        File dir = file.getParentFile();
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        FileOutputStream fos = new FileOutputStream(file);
+        for (File tsFile : fileList) {
+            IOUtils.copyLarge(new FileInputStream(tsFile), fos);
+        }
+        fos.close();
     }
 
     /**
@@ -113,9 +129,9 @@ public class MUtils {
     /**
      * 将M3U8对象的所有ts切片合并为1个
      */
-    public static void merge(M3U8 m3u8, String tofile, String basePath) throws IOException {
+    public static void merge(M3U8 m3u8, String toFile, String basePath) throws IOException {
         List<M3U8Ts> mergeList = getLimitM3U8Ts(m3u8);
-        File saveFile = new File(tofile);
+        File saveFile = new File(toFile);
         FileOutputStream fos = new FileOutputStream(saveFile);
         File file;
         for (M3U8Ts ts : mergeList) {
@@ -150,8 +166,8 @@ public class MUtils {
                 dir.delete();// 删除文件
             } else if (dir.isDirectory()) {// 否则如果它是一个目录
                 File[] files = dir.listFiles();// 声明目录下所有的文件 files[];
-                for (int i = 0; i < files.length; i++) {// 遍历目录下所有的文件
-                    clearDir(files[i]);// 把每个文件用这个方法进行迭代
+                for (File file : files) {// 遍历目录下所有的文件
+                    clearDir(file);// 把每个文件用这个方法进行迭代
                 }
                 dir.delete();// 删除文件夹
             }

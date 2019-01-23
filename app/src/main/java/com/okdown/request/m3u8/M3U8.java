@@ -48,9 +48,6 @@ public class M3U8 {
         this.endDownloadTime = endDownloadTime;
     }
 
-    /**
-     * 获取开始时间
-     */
     public long getStartTime() {
         if (tsList.size() > 0) {
             Collections.sort(tsList);
@@ -60,9 +57,6 @@ public class M3U8 {
         return 0;
     }
 
-    /**
-     * 获取结束时间(加上了最后一段时间的持续时间)
-     */
     public long getEndTime() {
         if (tsList.size() > 0) {
             M3U8Ts m3U8Ts = tsList.get(tsList.size() - 1);
@@ -70,19 +64,5 @@ public class M3U8 {
             return endTime;
         }
         return 0;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("basePath: " + basePath);
-        for (M3U8Ts ts : tsList) {
-            sb.append("\nts_file_name = " + ts);
-        }
-        sb.append("\n\nstartTime = " + startTime);
-        sb.append("\n\nendTime = " + endTime);
-        sb.append("\n\nstartDownloadTime = " + startDownloadTime);
-        sb.append("\n\nendDownloadTime = " + endDownloadTime);
-        return sb.toString();
     }
 }

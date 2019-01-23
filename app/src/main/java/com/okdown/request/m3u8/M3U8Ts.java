@@ -34,15 +34,6 @@ public class M3U8Ts implements Comparable<M3U8Ts> {
         return seconds;
     }
 
-    public void setSeconds(float seconds) {
-        this.seconds = seconds;
-    }
-
-    @Override
-    public String toString() {
-        return file + " (" + seconds + "sec)";
-    }
-
     /**
      * 获取时间
      */
