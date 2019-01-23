@@ -1,9 +1,8 @@
 package com.okdown.task.down;
 
 import com.okdown.request.model.Progress;
-import com.okdown.utils.ProgressListener;
 
-public abstract class DownloadListener implements ProgressListener {
+public abstract class DownloadListener {
 
     public final Object tag;
 
@@ -12,6 +11,7 @@ public abstract class DownloadListener implements ProgressListener {
     }
 
     public void onStart(Progress progress) {
+
     }
 
     public void onProgress(Progress progress) {

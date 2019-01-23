@@ -36,7 +36,7 @@ public class Progress implements Serializable {
     public String type;                             //文件后缀
     public String m3u8Url;                             //文件后缀
     public String m3u8UrlList;                      //如果文件是切片那么这里保存的是切片链接集合，用逗号分开
-    public String name;                      //名字
+    public String name;                             //名字
     public String folder;                           //保存文件夹
     public String filePath;                         //保存文件地址
     public String fileName;                         //保存的文件名

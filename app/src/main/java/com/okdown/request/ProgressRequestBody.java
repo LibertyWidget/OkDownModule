@@ -1,8 +1,6 @@
 package com.okdown.request;
 
-import com.okdown.request.model.HttpUtils;
 import com.okdown.request.model.Progress;
-import com.okdown.utils.Callback;
 import com.okdown.utils.OkLog;
 
 import java.io.IOException;
@@ -17,13 +15,11 @@ import okio.Sink;
 
 public class ProgressRequestBody<T> extends RequestBody {
 
-    private RequestBody requestBody;         //实际的待包装请求体
-    private Callback callback;
+    private RequestBody requestBody;
     private UploadInterceptor interceptor;
 
-    ProgressRequestBody(RequestBody requestBody, Callback callback) {
+    ProgressRequestBody(RequestBody requestBody) {
         this.requestBody = requestBody;
-        this.callback = callback;
     }
 
     @Override
@@ -68,24 +64,12 @@ public class ProgressRequestBody<T> extends RequestBody {
                 public void call(Progress progress) {
                     if (interceptor != null) {
                         interceptor.uploadProgress(progress);
-                    } else {
-                        onProgress(progress);
                     }
                 }
             });
         }
     }
 
-    private void onProgress(final Progress progress) {
-        HttpUtils.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (callback != null) {
-                    callback.uploadProgress(progress);
-                }
-            }
-        });
-    }
 
     public void setInterceptor(UploadInterceptor interceptor) {
         this.interceptor = interceptor;

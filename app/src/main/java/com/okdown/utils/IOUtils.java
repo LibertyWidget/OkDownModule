@@ -98,9 +98,6 @@ public class IOUtils {
         return count;
     }
 
-    /**
-     * 移动文件
-     */
     public static boolean moveFile(String sFile, String tFile) {
         File srcFile = new File(sFile);
         if (!srcFile.exists() || !srcFile.isFile())

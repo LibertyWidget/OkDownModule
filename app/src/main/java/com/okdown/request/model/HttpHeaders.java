@@ -72,7 +72,7 @@ public class HttpHeaders implements Serializable {
                 // We have nothing to do
             }
             if (TextUtils.isEmpty(webUserAgent)) {
-                webUserAgent = "okhttp-okgo/jeasonlzy";
+                webUserAgent = "okhttp";
             }
 
             Locale locale = Locale.getDefault();

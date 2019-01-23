@@ -44,21 +44,14 @@ public class HttpsUtils {
             TrustManager[] trustManagers = prepareTrustManager(certificates);
             X509TrustManager manager;
             if (trustManager != null) {
-                //优先使用用户自定义的TrustManager
                 manager = trustManager;
             } else if (trustManagers != null) {
-                //然后使用默认的TrustManager
                 manager = chooseTrustManager(trustManagers);
             } else {
-                //否则使用不安全的TrustManager
                 manager = UnSafeTrustManager;
             }
-            // 创建TLS类型的SSLContext对象， that uses our TrustManager
             SSLContext sslContext = SSLContext.getInstance("TLS");
-            // 用上面得到的trustManagers初始化SSLContext，这样sslContext就会信任keyStore中的证书
-            // 第一个参数是授权的密钥管理器，用来授权验证，比如授权自签名的证书验证。第二个是被授权的证书管理器，用来验证服务器端的证书
             sslContext.init(keyManagers, new TrustManager[]{manager}, null);
-            // 通过sslContext获取SSLSocketFactory对象
             sslParams.sSLSocketFactory = sslContext.getSocketFactory();
             sslParams.trustManager = manager;
             return sslParams;
@@ -87,15 +80,12 @@ public class HttpsUtils {
         if (certificates == null || certificates.length <= 0) return null;
         try {
             CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
-            // 创建一个默认类型的KeyStore，存储我们信任的证书
             KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
             keyStore.load(null);
             int index = 0;
             for (InputStream certStream : certificates) {
                 String certificateAlias = Integer.toString(index++);
-                // 证书工厂根据证书文件的流生成证书 cert
                 Certificate cert = certificateFactory.generateCertificate(certStream);
-                // 将 cert 作为可信证书放入到keyStore中
                 keyStore.setCertificateEntry(certificateAlias, cert);
                 try {
                     if (certStream != null) certStream.close();
@@ -103,11 +93,8 @@ public class HttpsUtils {
                     OkLog.printStackTrace(e);
                 }
             }
-            //我们创建一个默认类型的TrustManagerFactory
             TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            //用我们之前的keyStore实例初始化TrustManagerFactory，这样tmf就会信任keyStore中的证书
             tmf.init(keyStore);
-            //通过tmf获取TrustManager数组，TrustManager也会信任keyStore中的证书
             return tmf.getTrustManagers();
         } catch (Exception e) {
             OkLog.printStackTrace(e);

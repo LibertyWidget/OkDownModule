@@ -25,7 +25,6 @@ public class HttpUtils {
             for (Map.Entry<String, List<String>> urlParams : params.entrySet()) {
                 List<String> urlValues = urlParams.getValue();
                 for (String value : urlValues) {
-                    //对参数进行 utf-8 编码,防止头信息传中文
                     String urlValue = URLEncoder.encode(value, "UTF-8");
                     sb.append(urlParams.getKey()).append("=").append(urlValue).append("&");
                 }
@@ -67,7 +66,6 @@ public class HttpUtils {
     private static String getHeaderFileName(Response response) {
         String dispositionHeader = response.header(HttpHeaders.HEAD_KEY_CONTENT_DISPOSITION);
         if (dispositionHeader != null) {
-            //文件名可能包含双引号，需要去除
             dispositionHeader = dispositionHeader.replaceAll("\"", "");
             String split = "filename=";
             int indexOf = dispositionHeader.indexOf(split);

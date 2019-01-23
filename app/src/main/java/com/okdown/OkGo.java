@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
 
 public class OkGo {
-    public static final long DEFAULT_MILLISECONDS = 60000;      //默认的超时时间
+    private long DEFAULT_MILLISECONDS = 60000;      //默认的超时时间
     public static long REFRESH_TIME = 300;                      //回调刷新时间（单位ms）
 
     private Application context;            //全局上下文
@@ -32,9 +32,9 @@ public class OkGo {
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
-        builder.readTimeout(OkGo.DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
-        builder.writeTimeout(OkGo.DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
-        builder.connectTimeout(OkGo.DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
+        builder.readTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
+        builder.writeTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
+        builder.connectTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
 
         HttpsUtils.SSLParams sslParams = HttpsUtils.getSslSocketFactory();
         builder.sslSocketFactory(sslParams.sSLSocketFactory, sslParams.trustManager);
@@ -56,32 +56,22 @@ public class OkGo {
 
     public OkGo init(Application app) {
         context = app;
-        initOkGo(app);
+        initOkGo();
         OkDownload.$().init();
         return this;
     }
 
-    private void initOkGo(Application app) {
+    private void initOkGo() {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
         //超时时间设置，默认60秒
-        builder.readTimeout(OkGo.DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);      //全局的读取超时时间
-        builder.writeTimeout(OkGo.DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);     //全局的写入超时时间
-        builder.connectTimeout(OkGo.DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);   //全局的连接超时时间
-
-        //https相关设置，以下几种方案根据需要自己设置
-        //方法一：信任所有证书,不安全有风险
+        builder.readTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);      //全局的读取超时时间
+        builder.writeTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);     //全局的写入超时时间
+        builder.connectTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);   //全局的连接超时时间
         HttpsUtils.SSLParams sslParams1 = HttpsUtils.getSslSocketFactory();
-        //方法三：使用预埋证书，校验服务端证书（自签名证书）
-        //HttpsUtils.SSLParams sslParams3 = HttpsUtils.getSslSocketFactory(getAssets().open("srca.cer"));
-        //方法四：使用bks证书和密码管理客户端证书（双向认证），使用预埋证书，校验服务端证书（自签名证书）
-        //HttpsUtils.SSLParams sslParams4 = HttpsUtils.getSslSocketFactory(getAssets().open("xxx.bks"), "123456", getAssets().open("yyy.cer"));
         builder.sslSocketFactory(sslParams1.sSLSocketFactory, sslParams1.trustManager);
-
-        // 其他统一的配置
-        // 详细说明看GitHub文档：https://github.com/jeasonlzy/
         setOkHttpClient(builder.build());             //建议设置OkHttpClient，不设置会使用默认的
-        setRetryCount(3);                               //全局统一超时重连次数，默认为三次，那么最差的情况会请求4次(一次原始请求，三次重连请求)，不需要可以设置为0
+        setRetryCount(3);   //全局统一超时重连次数，默认为三次，那么最差的情况会请求4次(一次原始请求，三次重连请求)，不需要可以设置为0
     }
 
     public Context getContext() {

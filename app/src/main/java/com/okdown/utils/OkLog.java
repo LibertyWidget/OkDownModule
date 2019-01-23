@@ -23,12 +23,9 @@ public class OkLog extends Exception {
         super(detailMessage);
     }
 
+
     public static OkLog UNKNOWN() {
         return new OkLog("unknown exception!");
-    }
-
-    public static OkLog BREAKPOINT_NOT_EXIST() {
-        return new OkLog("breakpoint file does not exist!");
     }
 
     public static OkLog BREAKPOINT_EXPIRED() {

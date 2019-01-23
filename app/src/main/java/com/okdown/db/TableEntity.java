@@ -5,8 +5,8 @@ import java.util.List;
 
 public class TableEntity {
 
-    public String tableName;           //表名
-    private List<ColumnEntity> list;    //所有的表字段
+    public String tableName;
+    private List<ColumnEntity> list;
 
     public TableEntity(String tableName) {
         this.tableName = tableName;

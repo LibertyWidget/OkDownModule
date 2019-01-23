@@ -165,11 +165,10 @@ public class DownloadTask implements Runnable {
 
     @Override
     public void run() {
-        //从数据库恢复的情况
         if (null != progress.type)
             if (TextUtils.equals(DownMediaType.M3U8.name(), progress.type)) {
                 if (!TextUtils.isEmpty(progress.m3u8UrlList)) {
-                    if (0 != progress.currentSize) {//原来都没有下载成功过
+                    if (0 != progress.currentSize) {
                         File file = new File(String.format(BASE_URL, progress.name));
                         File[] files = file.listFiles();
                         if (null == files || files.length < progress.currentSize) {
@@ -198,7 +197,6 @@ public class DownloadTask implements Runnable {
             if (!TextUtils.isEmpty(progress.filePath)) {
                 File file = new File(progress.filePath);
                 if (!file.exists()) {
-                    //如果文件删除，数据库还有 那么重新开始下载
                     progress.currentSize = 0;
                 }
             }
@@ -228,24 +226,17 @@ public class DownloadTask implements Runnable {
         if (progress.totalSize == -1) {
             progress.totalSize = body.contentLength();
         }
-        //file type
+
         MediaType mediaType = body.contentType();
         if (null != mediaType) {
             String subtype = mediaType.subtype();
             if (!TextUtils.isEmpty(subtype)) {
                 subtype = subtype.toLowerCase();
-                /*
-                    http://1251883823.vod2.myqcloud.com/6b94ca32vodsh1251883823/a0fd47ff5285890784524177969/2gyLYJt7ZQ8A.mp4
-                 */
                 if (subtype.contains("video/mp4")) {
                     progress.type = DownMediaType.MP4.name();
-                } else
-                    //https://v-6-cn.com/20190101/8414_be31c04d/index.m3u8?sign=a59c25d7579e1f7e96edca7af6165cbd
-                    //https://135zyv6.xw0371.com/2018/11/15/tqsrSI3Bbm0abCmU/playlist.m3u8
-                    //http://h1.aaccy.com/ckplayer/youku/lsit/XNDAxODM2MjkzMg==.m3u8?ts=1548126978&key=30ede8a4ba665a2c9d080a1775d094f5
-                    if (subtype.contains("vnd.apple.mpegurl") || subtype.contains("x-mpegurl")) {
-                        progress.type = DownMediaType.M3U8.name();
-                    }
+                } else if (subtype.contains("vnd.apple.mpegurl") || subtype.contains("x-mpegurl")) {
+                    progress.type = DownMediaType.M3U8.name();
+                }
             }
         }
 
@@ -358,9 +349,7 @@ public class DownloadTask implements Runnable {
             progress.currentSize = 0;
             IOUtils.createFolder(new File(String.format(BASE_URL, progress.name)));
         }
-        //是不被标记
         boolean label = false;
-        //是否有效链接
         boolean valid = true;
         if (tsList.size() > 2) {
             M3U8Ts ts1 = tsList.get(0);
@@ -385,7 +374,6 @@ public class DownloadTask implements Runnable {
             URL url = new URL(file);
             HttpURLConnection urlConn = (HttpURLConnection) url.openConnection();
             BufferedInputStream in = new BufferedInputStream(urlConn.getInputStream(), BUFFER_SIZE);
-            //防止名字相同只是标识不同下载失败
             String fileName;
             if (label) {
                 fileName = copyUrl + progress.currentSize + ts.getFileName();
@@ -409,7 +397,6 @@ public class DownloadTask implements Runnable {
                 });
             }
         }
-        //没有下载完成 并且文件个数相同才合并
         if (progress.status != FileStatus.FINISH.ordinal() && progress.currentSize == tsList.size()) {
             String format = String.format(FILE_NAME, String.format(FOLDED, progress.name), progress.name);
             if (label) {
@@ -421,11 +408,8 @@ public class DownloadTask implements Runnable {
             } else {
                 MUtils.merge(m3U8, format);
             }
-            //移动
             MUtils.moveFile(format, OkDownload.$().getFolder());
-            //删除
             MUtils.clearDir(new File(String.format(FOLDED, progress.name)));
-            //下载完成
             if (progress.currentSize == tsList.size()) {
                 postOnFinish(progress);
             }

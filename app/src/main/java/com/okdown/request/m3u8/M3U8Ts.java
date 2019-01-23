@@ -13,11 +13,6 @@ public class M3U8Ts implements Comparable<M3U8Ts> {
         return file;
     }
 
-    /**
-     * 获取文件名字，支取***.ts
-     *
-     * @return
-     */
     public String getFileName() {
         String fileName = file.substring(file.lastIndexOf("/") + 1);
         if (fileName.contains("?")) {
@@ -34,9 +29,6 @@ public class M3U8Ts implements Comparable<M3U8Ts> {
         return seconds;
     }
 
-    /**
-     * 获取时间
-     */
     public long getLongDate() {
         try {
             return Long.parseLong(file.substring(0, file.lastIndexOf(".")));

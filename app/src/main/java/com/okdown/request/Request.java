@@ -5,7 +5,6 @@ import android.text.TextUtils;
 import com.okdown.OkGo;
 import com.okdown.request.model.HttpHeaders;
 import com.okdown.request.model.HttpParams;
-import com.okdown.utils.Callback;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -22,27 +21,22 @@ public abstract class Request<T, R extends Request> implements Serializable {
     protected transient OkHttpClient client;
     protected transient Object tag;
     protected int retryCount;
-    protected HttpParams params = new HttpParams();     //添加的param
-    protected HttpHeaders headers = new HttpHeaders();  //添加的header
+    protected HttpParams params = new HttpParams();
+    protected HttpHeaders headers = new HttpHeaders();
     protected transient okhttp3.Request mRequest;
-    protected transient Callback callback;
     protected transient ProgressRequestBody.UploadInterceptor uploadInterceptor;
 
     public Request(String url) {
         this.url = url;
         baseUrl = url;
         OkGo go = OkGo.getInstance();
-        //默认添加 Accept-Language
         String acceptLanguage = HttpHeaders.getAcceptLanguage();
         if (!TextUtils.isEmpty(acceptLanguage))
             headers(HttpHeaders.HEAD_KEY_ACCEPT_LANGUAGE, acceptLanguage);
-        //默认添加 User-Agent
         String userAgent = HttpHeaders.getUserAgent();
         if (!TextUtils.isEmpty(userAgent)) headers(HttpHeaders.HEAD_KEY_USER_AGENT, userAgent);
-        //添加公共请求参数
         if (go.getCommonParams() != null) params(go.getCommonParams());
         if (go.getCommonHeaders() != null) headers(go.getCommonHeaders());
-        //添加缓存模式
         retryCount = go.getRetryCount();
     }
 
@@ -80,10 +74,9 @@ public abstract class Request<T, R extends Request> implements Serializable {
     public abstract okhttp3.Request generateRequest(RequestBody requestBody);
 
     public okhttp3.Call getRawCall() {
-        //构建请求体，返回call对象
         RequestBody requestBody = generateRequestBody();
         if (requestBody != null) {
-            ProgressRequestBody<T> progressRequestBody = new ProgressRequestBody<>(requestBody, callback);
+            ProgressRequestBody<T> progressRequestBody = new ProgressRequestBody<>(requestBody);
             progressRequestBody.setInterceptor(uploadInterceptor);
             mRequest = generateRequest(progressRequestBody);
         } else {

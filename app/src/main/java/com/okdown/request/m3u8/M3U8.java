@@ -7,10 +7,10 @@ import java.util.List;
 public class M3U8 {
     private String basePath;
     private List<M3U8Ts> tsList = new ArrayList<>();
-    private long startTime;//开始时间
-    private long endTime;//结束时间
-    private long startDownloadTime;//开始下载时间
-    private long endDownloadTime;//结束下载时间
+    private long startTime;
+    private long endTime;
+    private long startDownloadTime;
+    private long endDownloadTime;
 
     public String getBasePath() {
         return basePath;

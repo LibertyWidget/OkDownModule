@@ -2,11 +2,9 @@ package com.okdown.request.m3u8;
 
 import android.util.Log;
 
-
 import com.okdown.utils.IOUtils;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -79,9 +77,6 @@ public class MUtils {
         return ret;
     }
 
-    /**
-     * 将M3U8对象的所有ts切片合并为1个
-     */
     public static String merge(M3U8 m3u8, String toFile) throws IOException {
         List<M3U8Ts> mergeList = getLimitM3U8Ts(m3u8);
         File file = new File(toFile);
@@ -94,9 +89,6 @@ public class MUtils {
         return toFile;
     }
 
-    /**
-     * 合并文件
-     */
     public static void merge(File[] fileList, String toFile) throws IOException {
         File file = new File(toFile);
         File dir = file.getParentFile();
@@ -110,9 +102,6 @@ public class MUtils {
         fos.close();
     }
 
-    /**
-     * 合并文件
-     */
     public static void merge(List<File> fileList, String toFile) throws IOException {
         File file = new File(toFile);
         File dir = file.getParentFile();
@@ -126,9 +115,6 @@ public class MUtils {
         fos.close();
     }
 
-    /**
-     * 将M3U8对象的所有ts切片合并为1个
-     */
     public static void merge(M3U8 m3u8, String toFile, String basePath) throws IOException {
         List<M3U8Ts> mergeList = getLimitM3U8Ts(m3u8);
         File saveFile = new File(toFile);
@@ -143,9 +129,6 @@ public class MUtils {
         fos.close();
     }
 
-    /**
-     * 移动文件
-     */
     public static boolean moveFile(String sFile, String tFile) {
         File srcFile = new File(sFile);
         if (!srcFile.exists() || !srcFile.isFile())
@@ -157,26 +140,20 @@ public class MUtils {
         return srcFile.renameTo(new File(tFile + File.separator + srcFile.getName()));
     }
 
-    /**
-     * 清空文件夹
-     */
     public static void clearDir(File dir) {
-        if (dir.exists()) {// 判断文件是否存在
-            if (dir.isFile()) {// 判断是否是文件
-                dir.delete();// 删除文件
-            } else if (dir.isDirectory()) {// 否则如果它是一个目录
-                File[] files = dir.listFiles();// 声明目录下所有的文件 files[];
-                for (File file : files) {// 遍历目录下所有的文件
-                    clearDir(file);// 把每个文件用这个方法进行迭代
+        if (dir.exists()) {
+            if (dir.isFile()) {
+                dir.delete();
+            } else if (dir.isDirectory()) {
+                File[] files = dir.listFiles();
+                for (File file : files) {
+                    clearDir(file);
                 }
-                dir.delete();// 删除文件夹
+                dir.delete();
             }
         }
     }
 
-    /**
-     * 获取指定区间的M3U8切片
-     */
     public static List<M3U8Ts> getLimitM3U8Ts(M3U8 m3u8) {
         List<M3U8Ts> downList = new ArrayList<>();
 

@@ -58,16 +58,6 @@ public class HttpParams implements Serializable {
             in.defaultReadObject();
             contentType = MediaType.parse((String) in.readObject());
         }
-
-        @Override
-        public String toString() {
-            return "FileWrapper{" + //
-                    "file=" + file + //
-                    ", fileName=" + fileName + //
-                    ", contentType=" + contentType + //
-                    ", fileSize=" + fileSize +//
-                    "}";
-        }
     }
 
     @Override

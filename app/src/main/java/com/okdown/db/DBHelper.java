@@ -29,22 +29,22 @@ public class DBHelper extends SQLiteOpenHelper {
     DBHelper(Context context) {
         super(context, DB_CACHE_NAME, null, DB_CACHE_VERSION);
 
-        downloadTableEntity.addColumn(new ColumnEntity(Progress.URL, "VARCHAR", true, true))//
-                .addColumn(new ColumnEntity(Progress.TYPE, "VARCHAR"))//
-                .addColumn(new ColumnEntity(Progress.M3U8_URL, "VARCHAR"))//
-                .addColumn(new ColumnEntity(Progress.M3U8_URL_LIST, "VARCHAR"))//
-                .addColumn(new ColumnEntity(Progress.NAME, "VARCHAR"))//
-                .addColumn(new ColumnEntity(Progress.FOLDER, "VARCHAR"))//
-                .addColumn(new ColumnEntity(Progress.FILE_PATH, "VARCHAR"))//
-                .addColumn(new ColumnEntity(Progress.FILE_NAME, "VARCHAR"))//
-                .addColumn(new ColumnEntity(Progress.FRACTION, "VARCHAR"))//
-                .addColumn(new ColumnEntity(Progress.TOTAL_SIZE, "INTEGER"))//
-                .addColumn(new ColumnEntity(Progress.CURRENT_SIZE, "INTEGER"))//
-                .addColumn(new ColumnEntity(Progress.STATUS, "INTEGER"))//
-                .addColumn(new ColumnEntity(Progress.PRIORITY, "INTEGER"))//
-                .addColumn(new ColumnEntity(Progress.DATE, "INTEGER"))//
-                .addColumn(new ColumnEntity(Progress.REQUEST, "BLOB"))//
-                .addColumn(new ColumnEntity(Progress.EXTRA1, "BLOB"));//
+        downloadTableEntity.addColumn(new ColumnEntity(Progress.URL, "VARCHAR", true, true))
+                .addColumn(new ColumnEntity(Progress.TYPE, "VARCHAR"))
+                .addColumn(new ColumnEntity(Progress.M3U8_URL, "VARCHAR"))
+                .addColumn(new ColumnEntity(Progress.M3U8_URL_LIST, "VARCHAR"))
+                .addColumn(new ColumnEntity(Progress.NAME, "VARCHAR"))
+                .addColumn(new ColumnEntity(Progress.FOLDER, "VARCHAR"))
+                .addColumn(new ColumnEntity(Progress.FILE_PATH, "VARCHAR"))
+                .addColumn(new ColumnEntity(Progress.FILE_NAME, "VARCHAR"))
+                .addColumn(new ColumnEntity(Progress.FRACTION, "VARCHAR"))
+                .addColumn(new ColumnEntity(Progress.TOTAL_SIZE, "INTEGER"))
+                .addColumn(new ColumnEntity(Progress.CURRENT_SIZE, "INTEGER"))
+                .addColumn(new ColumnEntity(Progress.STATUS, "INTEGER"))
+                .addColumn(new ColumnEntity(Progress.PRIORITY, "INTEGER"))
+                .addColumn(new ColumnEntity(Progress.DATE, "INTEGER"))
+                .addColumn(new ColumnEntity(Progress.REQUEST, "BLOB"))
+                .addColumn(new ColumnEntity(Progress.EXTRA1, "BLOB"));
     }
 
     @Override
@@ -89,7 +89,6 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public static boolean isTableExists(SQLiteDatabase db, String tableName) {
         if (tableName == null || db == null || !db.isOpen()) return false;
-
         Cursor cursor = null;
         int count = 0;
         try {
