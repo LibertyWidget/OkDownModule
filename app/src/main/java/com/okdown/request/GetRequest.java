@@ -1,7 +1,7 @@
 package com.okdown.request;
 
-import okhttp3.Request;
-import okhttp3.RequestBody;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
 
 public class GetRequest<T> extends NoBodyRequest<T, GetRequest<T>> {
 
@@ -9,7 +9,6 @@ public class GetRequest<T> extends NoBodyRequest<T, GetRequest<T>> {
         super(url);
     }
 
-    @Override
     public Request generateRequest(RequestBody requestBody) {
         Request.Builder requestBuilder = generateRequestBuilder(requestBody);
         return requestBuilder.get().url(url).tag(tag).build();

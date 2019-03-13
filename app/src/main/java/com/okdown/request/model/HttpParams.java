@@ -1,5 +1,7 @@
 package com.okdown.request.model;
 
+import com.squareup.okhttp.MediaType;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -9,7 +11,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import okhttp3.MediaType;
 
 public class HttpParams implements Serializable {
     private static final long serialVersionUID = 7369819159227055048L;

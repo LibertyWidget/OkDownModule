@@ -1,10 +1,10 @@
 package com.okdown.request;
 
 import com.okdown.request.model.HttpUtils;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
 
-import okhttp3.RequestBody;
-
-public abstract class NoBodyRequest<T, R extends NoBodyRequest> extends Request<T, R> {
+public abstract class NoBodyRequest<T, R extends NoBodyRequest> extends com.okdown.request.Request<T, R> {
     private static final long serialVersionUID = 1200621102761691196L;
 
     public NoBodyRequest(String url) {
@@ -16,9 +16,9 @@ public abstract class NoBodyRequest<T, R extends NoBodyRequest> extends Request<
         return null;
     }
 
-    protected okhttp3.Request.Builder generateRequestBuilder(RequestBody requestBody) {
+    protected Request.Builder generateRequestBuilder(RequestBody requestBody) {
         url = HttpUtils.createUrlFromParams(baseUrl, params.urlParamsMap);
-        okhttp3.Request.Builder requestBuilder = new okhttp3.Request.Builder();
+        Request.Builder requestBuilder = new Request.Builder();
         return HttpUtils.appendHeaders(requestBuilder, headers);
     }
 }

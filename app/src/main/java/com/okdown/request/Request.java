@@ -9,9 +9,10 @@ import com.okdown.request.model.HttpParams;
 import java.io.IOException;
 import java.io.Serializable;
 
-import okhttp3.OkHttpClient;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
 
 @SuppressWarnings("unchecked")
 public abstract class Request<T, R extends Request> implements Serializable {
@@ -23,7 +24,7 @@ public abstract class Request<T, R extends Request> implements Serializable {
     protected int retryCount;
     protected HttpParams params = new HttpParams();
     protected HttpHeaders headers = new HttpHeaders();
-    protected transient okhttp3.Request mRequest;
+    protected transient com.squareup.okhttp.Request mRequest;
     protected transient ProgressRequestBody.UploadInterceptor uploadInterceptor;
 
     public Request(String url) {
@@ -65,15 +66,15 @@ public abstract class Request<T, R extends Request> implements Serializable {
         return baseUrl;
     }
 
-    public okhttp3.Request getRequest() {
+    public com.squareup.okhttp.Request getRequest() {
         return mRequest;
     }
 
     protected abstract RequestBody generateRequestBody();
 
-    public abstract okhttp3.Request generateRequest(RequestBody requestBody);
+    public abstract com.squareup.okhttp.Request generateRequest(RequestBody requestBody);
 
-    public okhttp3.Call getRawCall() {
+    public Call getRawCall() {
         RequestBody requestBody = generateRequestBody();
         if (requestBody != null) {
             ProgressRequestBody<T> progressRequestBody = new ProgressRequestBody<>(requestBody);

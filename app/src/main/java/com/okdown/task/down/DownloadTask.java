@@ -34,9 +34,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import okhttp3.MediaType;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
 
 public class DownloadTask implements Runnable {
     private static final int BUFFER_SIZE = 1024 * 8;
@@ -224,7 +224,11 @@ public class DownloadTask implements Runnable {
             return;
         }
         if (progress.totalSize == -1) {
-            progress.totalSize = body.contentLength();
+            try {
+                progress.totalSize = body.contentLength();
+            } catch (IOException ignored) {
+
+            }
         }
 
         MediaType mediaType = body.contentType();

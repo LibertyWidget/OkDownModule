@@ -4,16 +4,15 @@ import android.text.TextUtils;
 
 import com.okdown.OkGo;
 import com.okdown.utils.OkLog;
+import com.squareup.okhttp.Headers;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
-
-import okhttp3.Headers;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class HttpUtils {
     public static String createUrlFromParams(String url, Map<String, List<String>> params) {

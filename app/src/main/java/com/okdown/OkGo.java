@@ -13,7 +13,7 @@ import com.okdown.request.model.HttpsUtils;
 
 import java.util.concurrent.TimeUnit;
 
-import okhttp3.OkHttpClient;
+import com.squareup.okhttp.OkHttpClient;
 
 public class OkGo {
     private long DEFAULT_MILLISECONDS = 60000;      //默认的超时时间
@@ -29,17 +29,13 @@ public class OkGo {
     private OkGo() {
         mDelivery = new Handler(Looper.getMainLooper());
         mRetryCount = 3;
-
-        OkHttpClient.Builder builder = new OkHttpClient.Builder();
-
-        builder.readTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
-        builder.writeTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
-        builder.connectTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
-
+        okHttpClient = new OkHttpClient();
+        okHttpClient.setReadTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
+        okHttpClient.setWriteTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
+        okHttpClient.setConnectTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
         HttpsUtils.SSLParams sslParams = HttpsUtils.getSslSocketFactory();
-        builder.sslSocketFactory(sslParams.sSLSocketFactory, sslParams.trustManager);
-        builder.hostnameVerifier(HttpsUtils.UnSafeHostnameVerifier);
-        okHttpClient = builder.build();
+        okHttpClient.setSslSocketFactory(sslParams.sSLSocketFactory);
+        okHttpClient.setHostnameVerifier(HttpsUtils.UnSafeHostnameVerifier);
     }
 
     public static OkGo getInstance() {
@@ -62,15 +58,13 @@ public class OkGo {
     }
 
     private void initOkGo() {
-        OkHttpClient.Builder builder = new OkHttpClient.Builder();
-
-        //超时时间设置，默认60秒
-        builder.readTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);      //全局的读取超时时间
-        builder.writeTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);     //全局的写入超时时间
-        builder.connectTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);   //全局的连接超时时间
-        HttpsUtils.SSLParams sslParams1 = HttpsUtils.getSslSocketFactory();
-        builder.sslSocketFactory(sslParams1.sSLSocketFactory, sslParams1.trustManager);
-        setOkHttpClient(builder.build());             //建议设置OkHttpClient，不设置会使用默认的
+        okHttpClient = new OkHttpClient();
+        okHttpClient.setReadTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
+        okHttpClient.setWriteTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
+        okHttpClient.setConnectTimeout(DEFAULT_MILLISECONDS, TimeUnit.MILLISECONDS);
+        HttpsUtils.SSLParams sslParams = HttpsUtils.getSslSocketFactory();
+        okHttpClient.setSslSocketFactory(sslParams.sSLSocketFactory);
+        okHttpClient.setHostnameVerifier(HttpsUtils.UnSafeHostnameVerifier);
         setRetryCount(3);   //全局统一超时重连次数，默认为三次，那么最差的情况会请求4次(一次原始请求，三次重连请求)，不需要可以设置为0
     }
 
