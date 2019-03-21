@@ -236,7 +236,7 @@ public class DownloadTask implements Runnable {
             String subtype = mediaType.subtype();
             if (!TextUtils.isEmpty(subtype)) {
                 subtype = subtype.toLowerCase();
-                if (subtype.contains("video/mp4")) {
+                if (subtype.contains("video/mp4") || subtype.contains("mp4")) {
                     progress.type = DownMediaType.MP4.name();
                 } else if (subtype.contains("vnd.apple.mpegurl") || subtype.contains("x-mpegurl")) {
                     progress.type = DownMediaType.M3U8.name();
@@ -261,7 +261,7 @@ public class DownloadTask implements Runnable {
             file = new File(String.format("%s%s/%s", progress.folder, progress.name, fileName));
             progress.filePath = file.getAbsolutePath();
         } else {
-            file = new File(progress.filePath, progress.name);
+            file = new File(progress.filePath);
         }
 
         if (startPosition > 0 && !file.exists()) {
